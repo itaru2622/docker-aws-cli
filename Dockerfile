@@ -2,14 +2,17 @@ FROM debian:buster
 
 RUN apt-get update && apt-get install -y apt-transport-https ca-certificates curl  gnupg  lsb-release unzip 
 
-RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+RUN curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 RUN echo "deb https://apt.kubernetes.io/ kubernetes-xenial main"  | tee -a /etc/apt/sources.list.d/kubernetes.list
 
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
 RUN echo  "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee -a /etc/apt/sources.list.d/docker.list
 
+#nodejs 14.x for AWS CDK
+RUN curl -fsSL https://deb.nodesource.com/setup_14.x | bash -
+
 RUN apt-get update; \
-    apt-get install -y groff bash bash-completion dnsutils kubectl docker-ce jq vim make procps net-tools iputils-ping 
+    apt-get install -y groff bash bash-completion dnsutils kubectl docker-ce jq vim make procps net-tools iputils-ping nodejs
 
 RUN cp -p /etc/skel/.[a-z]* /root/
 
@@ -34,3 +37,11 @@ RUN curl -sSL "https://github.com/weaveworks/eksctl/releases/latest/download/eks
 
 RUN curl -sSL https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/aws-iam-authenticator -o /usr/local/bin/aws-iam-authenticator ; \
     chmod a+x /usr/local/bin/aws-iam-authenticator 
+
+# https://aws.amazon.com/jp/blogs/containers/introducing-oidc-identity-provider-authentication-amazon-eks/
+RUN ( mkdir -p /opt/aws/cognitouserpool ; \
+      cd /opt/aws/cognitouserpool ;\
+      npm i -g aws-cdk; \
+      cdk init -l typescript ;\
+      npm install @aws-cdk/aws-cognito; \
+    )
