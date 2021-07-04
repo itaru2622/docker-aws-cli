@@ -7,11 +7,14 @@ name: Docker Build & Publish
 
 on:
   push:
+    paths-ignore:
+    - '**.md'
     branches: [ master ]
-    # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ master ]
+    paths-ignore:
+    - '**.md'
 # schedule:
 #   - cron: '34 22 * * *'
 

@@ -1,5 +1,6 @@
-## basic use example.
+[![Docker Build & Publish](https://github.com/itaru2622/aws-cli/actions/workflows/build_publish.yml/badge.svg?branch=master)](https://github.com/itaru2622/aws-cli/actions/workflows/build_publish.yml)
 
+## basic use example
 
 ```bash
 export DIR_AWS_PROFILE=${HOME}/.aws
