@@ -17,7 +17,8 @@ RUN echo  "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_relea
 RUN curl -fsSL https://deb.nodesource.com/setup_14.x | bash -
 
 RUN apt-get update; \
-    apt-get install -y groff bash bash-completion dnsutils   kubectl helm  docker-ce jq vim make procps net-tools iputils-ping nodejs
+    apt-get install -y groff bash bash-completion dnsutils   kubectl helm  docker-ce jq vim make procps net-tools iputils-ping nodejs \
+                       openssh-client dante-client git
 
 
 ######## aws cmds
