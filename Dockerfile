@@ -24,28 +24,35 @@ RUN apt-get update; \
 # AWS cli tool with eksctl(AWS kubectl)
 #  basic usage =>    https://hub.docker.com/r/amazon/aws-cli
 #    aws-cli   =>    https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html
-#    eksctl    =>    https://docs.aws.amazon.com/ja_jp/eks/latest/userguide/eksctl.html
-#    aws-iam-auth => https://docs.aws.amazon.com/ja_jp/eks/latest/userguide/install-aws-iam-authenticator.html
+#    eksctl    =>    https://docs.aws.amazon.com/eks/latest/userguide/eksctl.html
+#    aws-iam-auth => https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html
+#    aws-cdk   =>    https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html
 
-RUN mkdir -p /tmp/awscli; \
+ARG prefix=/opt/aws
+
+RUN mkdir -p ${prefix}/bin ${prefix}/aws-cli; mkdir -p /tmp/awscli; \
     ( cd /tmp/awscli; \
       curl -sSL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscli.zip; \
       unzip awscli.zip;  \
-      ./aws/install -b /usr/local/bin -i /usr/local/aws-cli ; \
+      ./aws/install -b ${prefix}/bin -i ${prefix}/aws-cli ; \
       mkdir -p /etc/bash_completion.d; \
       echo "complete -C aws_completer aws" > /etc/bash_completion.d/aws_bash_completer; \
     ); rm -rf /tmp/awscli;
 
 RUN curl -sSL "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" \
-    | tar xvzf - -C /usr/local/bin
+    | tar xvzf - -C ${prefix}/bin
 
-RUN curl -sSL https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/aws-iam-authenticator -o /usr/local/bin/aws-iam-authenticator ; \
-    chmod a+x /usr/local/bin/aws-iam-authenticator 
+RUN curl -sSL https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/aws-iam-authenticator \
+         -o ${prefix}/bin/aws-iam-authenticator ; \
+    chmod a+x ${prefix}/bin/aws-iam-authenticator
 
-# https://aws.amazon.com/jp/blogs/containers/introducing-oidc-identity-provider-authentication-amazon-eks/
-RUN ( mkdir -p /opt/aws/cognitouserpool ; \
-      cd /opt/aws/cognitouserpool ;\
-      npm i -g aws-cdk; \
-      cdk init -l typescript ;\
-      npm install @aws-cdk/aws-cognito; \
+RUN cd ${prefix}; npm install aws-cdk;
+
+# https://aws.amazon.com/blogs/containers/introducing-oidc-identity-provider-authentication-amazon-eks/
+RUN ( mkdir -p ${prefix}/cognitouserpool;\
+      cd ${prefix}/cognitouserpool ;\
+      ${prefix}/node_modules/.bin/cdk init -l typescript ; npm install @aws-cdk/aws-cognito; \
     )
+
+ENV NODE_PATH=${prefix}/node_modules
+ENV PATH=${prefix}/bin:${prefix}/node_modules/.bin:${PATH}
