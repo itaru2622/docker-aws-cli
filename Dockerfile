@@ -20,6 +20,7 @@ RUN apt-get update; \
     apt-get install -y groff bash bash-completion dnsutils   kubectl helm  docker-ce jq vim make procps net-tools iputils-ping nodejs \
                        openssh-client dante-client git
 
+RUN mkdir -p /etc/bash_completion.d; kubectl completion bash > /etc/bash_completion.d/kubectl
 
 ######## aws cmds
 # AWS cli tool with eksctl(AWS kubectl)
@@ -37,14 +38,15 @@ RUN mkdir -p ${prefix}/bin ${prefix}/aws-cli; mkdir -p /tmp/awscli; \
       unzip awscli.zip;  \
       ./aws/install -b ${prefix}/bin -i ${prefix}/aws-cli ; \
       mkdir -p /etc/bash_completion.d; \
-      echo "complete -C aws_completer aws" > /etc/bash_completion.d/aws_bash_completer; \
+      echo "complete -C aws_completer aws" > /etc/bash_completion.d/aws; \
     ); rm -rf /tmp/awscli;
 
 RUN curl -sSL "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" \
-    | tar xvzf - -C ${prefix}/bin
+    | tar xvzf - -C ${prefix}/bin; \
+    ${prefix}/bin/eksctl completion bash > /etc/bash_completion.d/eksctl
 
-RUN curl -sSL https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/aws-iam-authenticator \
-         -o ${prefix}/bin/aws-iam-authenticator ; \
+ARG dlURL=https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/aws-iam-authenticator
+RUN curl -sSL ${dlURL} -o ${prefix}/bin/aws-iam-authenticator ; \
     chmod a+x ${prefix}/bin/aws-iam-authenticator
 
 RUN cd ${prefix}; npm install aws-cdk;
