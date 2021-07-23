@@ -17,6 +17,7 @@ on:
     - '**.md'
   schedule:
     - cron: '00 20 * * 0-5'
+  workflow_dispatch:
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -24,11 +25,10 @@ env:
   REGISTRY: docker.io
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
-
+  TAG_LATEST: latest
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -57,10 +57,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=schedule,pattern=latest
-            type=ref,event=branch,enable=${{ !endsWith(github.ref, 'refs/heads/master') }}
             type=semver,pattern={{raw}}
-            type=raw,value=latest,enable=${{ endsWith(github.ref, 'refs/heads/master') }}
+            type=schedule,pattern=${{env.TAG_LATEST}}
+            type=ref,event=branch,enable=${{ !endsWith(github.ref, 'refs/heads/master') }}
+            type=raw,value=${{env.TAG_LATEST}},enable=${{ endsWith(github.ref, 'refs/heads/master') }}
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
