@@ -59,3 +59,5 @@ RUN ( mkdir -p ${prefix}/cognitouserpool;\
 
 ENV NODE_PATH=${prefix}/node_modules
 ENV PATH=${prefix}/bin:${prefix}/node_modules/.bin:${PATH}
+RUN mkdir -p /root/.aws /root/.kube; ln -s /opt/aws/bin /home/bin
+VOLUME ${prefix} /root/.aws /root/.kube /home/bin
