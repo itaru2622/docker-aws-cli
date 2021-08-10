@@ -18,9 +18,10 @@ RUN curl -fsSL https://deb.nodesource.com/setup_14.x | bash -
 
 RUN apt-get update; \
     apt-get install -y groff bash bash-completion dnsutils   kubectl helm  docker-ce jq vim make procps net-tools iputils-ping nodejs \
-                       openssh-client dante-client git
+                       openssh-client dante-client git screen
 
 RUN mkdir -p /etc/bash_completion.d; kubectl completion bash > /etc/bash_completion.d/kubectl
+RUN echo "escape ^t^t" > /root/.screenrc
 
 ######## aws cmds
 # AWS cli tool with eksctl(AWS kubectl)
