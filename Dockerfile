@@ -1,4 +1,4 @@
-FROM debian:buster
+FROM debian:bullseye
 
 RUN cp -p /etc/skel/.[a-z]* /root/
 
