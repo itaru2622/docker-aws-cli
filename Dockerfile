@@ -4,14 +4,12 @@ RUN cp -p /etc/skel/.[a-z]* /root/
 
 RUN apt-get update && apt-get install -y apt-transport-https ca-certificates curl  gnupg  lsb-release unzip 
 
-RUN curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-RUN echo "deb https://apt.kubernetes.io/ kubernetes-xenial main"  | tee -a /etc/apt/sources.list.d/kubernetes.list
-
-RUN curl -fsSL https://helm.baltorepo.com/organization/signing.asc | apt-key add -; \
-    echo "deb https://baltocdn.com/helm/stable/debian/ all main" | tee -a /etc/apt/sources.list.d/helm-stable-debian.list
-
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
-RUN echo  "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee -a /etc/apt/sources.list.d/docker.list
+RUN curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -; \
+    curl -fsSL https://helm.baltorepo.com/organization/signing.asc   | apt-key add -; \
+    curl -fsSL https://download.docker.com/linux/debian/gpg          | apt-key add -; \
+    echo "deb https://apt.kubernetes.io/ kubernetes-xenial main"  | tee -a /etc/apt/sources.list.d/kubernetes.list; \
+    echo "deb https://baltocdn.com/helm/stable/debian/ all main"  | tee -a /etc/apt/sources.list.d/helm-stable-debian.list ; \
+    echo  "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee -a /etc/apt/sources.list.d/docker.list
 
 #nodejs 14.x for AWS CDK
 RUN curl -fsSL https://deb.nodesource.com/setup_14.x | bash -
@@ -33,14 +31,15 @@ RUN echo "escape ^t^t" > /root/.screenrc
 
 ARG prefix=/opt/aws
 
-RUN mkdir -p ${prefix}/bin ${prefix}/aws-cli; mkdir -p /tmp/awscli; \
+RUN mkdir -p ${prefix}/bin ${prefix}/aws-cli ; \
+    mkdir -p /tmp/awscli; \
     ( cd /tmp/awscli; \
       curl -sSL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscli.zip; \
       unzip awscli.zip;  \
       ./aws/install -b ${prefix}/bin -i ${prefix}/aws-cli ; \
-      mkdir -p /etc/bash_completion.d; \
       echo "complete -C aws_completer aws" > /etc/bash_completion.d/aws; \
-    ); rm -rf /tmp/awscli;
+    ); \
+    rm -rf /tmp/awscli;
 
 RUN curl -sSL "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" \
     | tar xvzf - -C ${prefix}/bin; \
