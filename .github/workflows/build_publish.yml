@@ -25,7 +25,10 @@ env:
   REGISTRY: docker.io
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
-  TAG_LATEST: latest
+  TAG_LATEST: bullseye
+  #BASE_IMG: debian:bullseye
+  BASE_IMG:  python:3.11-bullseye
+  VER_NODEJS: lts
 
 jobs:
   build:
@@ -49,7 +52,6 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-#         password: ${{ secrets.GITHUB_TOKEN }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # Extract metadata (tags, labels) for Docker
@@ -74,3 +76,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            base=${{ env.BASE_IMG }}
+            ver_nodejs=${{ env.VER_NODEJS }}
+            #dlURL : aws-iam-authenticator for k8s auth
+            dlURL=https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.5.9/aws-iam-authenticator_0.5.9_linux_amd64

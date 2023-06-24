@@ -1,25 +1,28 @@
-FROM debian:bullseye
+ARG base=debian:bullseye
+FROM ${base}
+ARG base
+
 
 RUN cp -p /etc/skel/.[a-z]* /root/
 
 RUN apt-get update && apt-get install -y apt-transport-https ca-certificates curl  gnupg  lsb-release unzip 
 
+# apt-repo for k8s, helm, docker
 RUN curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -; \
-    curl -fsSL https://helm.baltorepo.com/organization/signing.asc   | apt-key add -; \
-    curl -fsSL https://download.docker.com/linux/debian/gpg          | apt-key add -; \
     echo "deb https://apt.kubernetes.io/ kubernetes-xenial main"  | tee -a /etc/apt/sources.list.d/kubernetes.list; \
+    curl -fsSL https://helm.baltorepo.com/organization/signing.asc   | apt-key add -; \
     echo "deb https://baltocdn.com/helm/stable/debian/ all main"  | tee -a /etc/apt/sources.list.d/helm-stable-debian.list ; \
+    curl -fsSL https://download.docker.com/linux/debian/gpg          | apt-key add -; \
     echo  "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee -a /etc/apt/sources.list.d/docker.list
 
-#nodejs 14.x for AWS CDK
-RUN curl -fsSL https://deb.nodesource.com/setup_14.x | bash -
-
 RUN apt-get update; \
-    apt-get install -y groff bash bash-completion dnsutils   kubectl helm  docker-ce jq vim make procps net-tools iputils-ping nodejs \
-                       openssh-client dante-client git screen
+    apt-get install -y bash bash-completion vim make git screen jq  openssh-client dante-client \
+                       dnsutils  procps net-tools iputils-ping \
+                       kubectl helm  docker-ce  groff
 
 RUN mkdir -p /etc/bash_completion.d; kubectl completion bash > /etc/bash_completion.d/kubectl
 RUN echo "escape ^t^t" > /root/.screenrc
+
 
 ######## aws cmds
 # AWS cli tool with eksctl(AWS kubectl)
@@ -31,6 +34,7 @@ RUN echo "escape ^t^t" > /root/.screenrc
 
 ARG prefix=/opt/aws
 
+# aws-cli
 RUN mkdir -p ${prefix}/bin ${prefix}/aws-cli ; \
     mkdir -p /tmp/awscli; \
     ( cd /tmp/awscli; \
@@ -41,23 +45,28 @@ RUN mkdir -p ${prefix}/bin ${prefix}/aws-cli ; \
     ); \
     rm -rf /tmp/awscli;
 
+# eksctl
 RUN curl -sSL "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" \
     | tar xvzf - -C ${prefix}/bin; \
     ${prefix}/bin/eksctl completion bash > /etc/bash_completion.d/eksctl
 
-ARG dlURL=https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/aws-iam-authenticator
-RUN curl -sSL ${dlURL} -o ${prefix}/bin/aws-iam-authenticator ; \
-    chmod a+x ${prefix}/bin/aws-iam-authenticator
+# aws-iam-authenticator for k8s
+ARG dlURL=https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.5.9/aws-iam-authenticator_0.5.9_linux_amd64
+RUN curl -sSL ${dlURL} -o ${prefix}/bin/aws-iam-authenticator ; chmod a+x ${prefix}/bin/aws-iam-authenticator
 
-RUN cd ${prefix}; npm install aws-cdk;
+# aws-cdk, for nodejs
+#ARG ver_nodejs=lts
+#RUN curl -fsSL https://deb.nodesource.com/setup_${ver_nodejs}.x | bash - ;\
+#    (apt update; apt install -y nodejs; \
+#     cd ${prefix}; npm install aws-cdk-lib )
+#ENV NODE_PATH=${prefix}/node_modules
+#ENV PATH=${prefix}/node_modules/.bin:${PATH}
 
-# https://aws.amazon.com/blogs/containers/introducing-oidc-identity-provider-authentication-amazon-eks/
-RUN ( mkdir -p ${prefix}/cognitouserpool;\
-      cd ${prefix}/cognitouserpool ;\
-      ${prefix}/node_modules/.bin/cdk init -l typescript ; npm install @aws-cdk/aws-cognito; \
-    )
 
-ENV NODE_PATH=${prefix}/node_modules
-ENV PATH=${prefix}/bin:${prefix}/node_modules/.bin:${PATH}
-RUN mkdir -p /root/.aws /root/.kube; ln -s /opt/aws/bin /home/bin
+# aws CDK for python(3) and boto3
+RUN pip3 install aws-cdk-lib \
+                 boto3
+
+ENV PATH=${prefix}/bin:${PATH}
+RUN mkdir -p /root/.aws /root/.kube /root/.ssh; ln -s /opt/aws/bin /home/bin
 VOLUME ${prefix} /root/.aws /root/.kube /home/bin
